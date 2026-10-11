@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruiter Talent Hub - CareerForge AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="d-flex align-items-center gap-2 mb-4 px-2">
+                <i class="fas fa-building text-success fa-xl"></i>
+                <span class="brand-title fs-4">Recruiter Portal</span>
+            </div>
+
+            <nav class="nav flex-column mb-auto" id="recruiterTabs" role="tablist">
+                <button class="nav-link-custom active" data-bs-toggle="tab" data-bs-target="#tab-talent">
+                    <i class="fas fa-users-viewfinder"></i> Talent Discovery Engine
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-posted-jobs">
+                    <i class="fas fa-briefcase"></i> Posted Job Openings
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-applications">
+                    <i class="fas fa-user-check"></i> Candidate Applications
+                </button>
+            </nav>
+
+            <div class="border-top border-secondary pt-3 mt-3">
+                <div class="d-flex align-items-center justify-content-between text-muted px-2 mb-2">
+                    <small th:text="${recruiter.companyName}">TechCorp</small>
+                    <button class="theme-toggle-btn p-1 fs-6" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+                </div>
+                <a href="/logout" class="nav-link-custom text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Flash Message Alerts -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}">Success</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${errorMessage}">Error</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Recruiter Command Center</h3>
+                    <p class="text-secondary mb-0">Company: <span class="fw-bold text-success" th:text="${recruiter.companyName}">TechCorp</span> | Location: <span th:text="${recruiter.location}">Bangalore</span></p>
+                </div>
+                <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                    <i class="fas fa-plus me-1"></i> Post New Job Opening
+                </button>
+            </div>
+
+            <div class="tab-content" id="recruiterTabContent">
+                <!-- 1. TALENT DISCOVERY & RANKING ENGINE -->
+                <div class="tab-pane fade show active" id="tab-talent">
+                    <!-- Filter Toolbar -->
+                    <div class="card-saas p-4 mb-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-filter text-primary me-2"></i> Candidate Discovery &amp; Ranking Filters</h5>
+                        <form th:action="@{/recruiter/dashboard}" method="get" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Required Skill Tag</label>
+                                <input type="text" name="skillFilter" class="form-control" placeholder="e.g. Java" th:value="${selectedSkill}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Academic Branch</label>
+                                <select name="branchFilter" class="form-select">
+                                    <option value="">All Branches</option>
+                                    <option value="Computer Science & Engg">Computer Science &amp; Engg</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="AI & Data Science">AI &amp; Data Science</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Min CGPA</label>
+                                <input type="number" step="0.1" name="minCgpa" class="form-control" placeholder="7.5" th:value="${selectedMinCgpa}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Min Readiness Score</label>
+                                <input type="number" name="minReadiness" class="form-control" placeholder="70" th:value="${selectedMinReadiness}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary-custom w-100"><i class="fas fa-search me-1"></i> Filter</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Ranked Candidates Table -->
+                    <div class="card-saas p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">Ranked Candidate Pool (<span th:text="${candidates.size()}">3</span>)</h5>
+                            <span class="badge bg-secondary">Sorted by Placement Readiness Score</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Candidate Name</th>
+                                        <th>Branch &amp; Year</th>
+                                        <th>CGPA</th>
+                                        <th>Placement Readiness Score</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="c, iterStat : ${candidates}">
+                                        <td class="fw-bold text-muted" th:text="'#' + ${iterStat.count}">#1</td>
+                                        <td>
+                                            <div class="fw-bold" th:text="${c.user.name}">Rahul Sharma</div>
+                                            <div class="small text-muted" th:text="${c.user.email}">email@example.com</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary-subtle text-dark border" th:text="${c.branch}">CS</span>
+                                            <small class="text-muted" th:text="${c.year}">4th Year</small>
+                                        </td>
+                                        <td class="fw-bold text-primary" th:text="${c.cgpa}">8.8</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="fw-bold fs-5 text-success" th:text="${c.readinessScore} + ' / 100'">83 / 100</div>
+                                                <div class="progress flex-grow-1" style="height: 6px; width: 80px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" th:style="'width:' + ${c.readinessScore} + '%'"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-custom" 
+                                                  th:classappend="${c.readinessScore >= 75 ? 'badge-ready' : 'badge-potential'}"
+                                                  th:text="${c.readinessScore >= 75 ? 'Placement Ready' : 'High Potential'}">Ready</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a th:href="@{'/recruiter/candidate/' + ${c.id} + '/resume-pdf'}" target="_blank" class="btn btn-outline-success btn-sm">
+                                                    <i class="fas fa-file-pdf me-1"></i> View Resume
+                                                </a>
+                                                <button class="btn btn-outline-primary btn-sm cand-inspect-btn" 
+                                                        th:data-name="${c.user.name}"
+                                                        th:data-branch="${c.branch}"
+                                                        th:data-cgpa="${c.cgpa}"
+                                                        th:data-score="${c.readinessScore}">
+                                                    <i class="fas fa-eye me-1"></i> Quick View
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. POSTED JOBS -->
+                <div class="tab-pane fade" id="tab-posted-jobs">
+                    <div class="card-saas p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold mb-0">Your Active Job Listings</h4>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                                <i class="fas fa-plus me-1"></i> Post New Job
+                            </button>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6" th:each="j : ${postedJobs}">
+                                <div class="card-saas p-4 h-100 border">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="fw-bold mb-1" th:text="${j.title}">Java Full Stack Developer</h5>
+                                            <div class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i><span th:text="${j.location}">Bangalore</span> | Package: <strong class="text-success" th:text="${j.packageOffered}">₹8 - ₹12 LPA</strong></div>
+                                        </div>
+                                        <span class="badge bg-success" th:text="${j.status}">OPEN</span>
+                                    </div>
+                                    <p class="small text-secondary mb-3" th:text="${j.description}">Desc</p>
+                                    <div class="small fw-semibold text-primary">Required Skills:</div>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        <span class="badge bg-light text-dark border" th:each="sk : ${#strings.arraySplit(j.requiredSkills, ',')}" th:text="${#strings.trim(sk)}">Java</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. APPLICATIONS -->
+                <div class="tab-pane fade" id="tab-applications">
+                    <div class="card-saas p-4">
+                        <h4 class="fw-bold mb-3">Received Candidate Applications (<span th:text="${totalApplications.size()}">1</span>)</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Applicant</th>
+                                        <th>Applied Job</th>
+                                        <th>Match Score</th>
+                                        <th>Application Date</th>
+                                        <th>Current Status</th>
+                                        <th>Resume</th>
+                                        <th>Update Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="app : ${totalApplications}">
+                                        <td>
+                                            <div class="fw-bold" th:text="${app.studentProfile.user.name}">Rahul Sharma</div>
+                                            <small class="text-muted" th:text="${app.studentProfile.user.email}">email</small>
+                                        </td>
+                                        <td th:text="${app.job.title}">Java Developer</td>
+                                        <td class="fw-bold text-success" th:text="${app.matchScore} + '%'">88%</td>
+                                        <td th:text="${#temporals.format(app.applicationDate, 'dd MMM yyyy')}">Date</td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${app.status == 'SHORTLISTED' ? 'bg-primary' : (app.status == 'INTERVIEWING' ? 'bg-warning text-dark' : (app.status == 'ACCEPTED' ? 'bg-success' : (app.status == 'REJECTED' ? 'bg-danger' : 'bg-secondary')))}"
+                                                  th:text="${app.status}">APPLIED</span>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{'/recruiter/candidate/' + ${app.studentProfile.id} + '/resume-pdf'}" target="_blank" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-file-pdf me-1"></i> PDF
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <form th:action="@{/recruiter/application/status}" method="post" class="d-flex gap-2">
+                                                <input type="hidden" name="appId" th:value="${app.id}">
+                                                <select name="status" class="form-select form-select-sm">
+                                                    <option value="APPLIED" th:selected="${app.status == 'APPLIED'}">Applied</option>
+                                                    <option value="SHORTLISTED" th:selected="${app.status == 'SHORTLISTED'}">Shortlist</option>
+                                                    <option value="INTERVIEWING" th:selected="${app.status == 'INTERVIEWING'}">Interviewing</option>
+                                                    <option value="ACCEPTED" th:selected="${app.status == 'ACCEPTED'}">Accept</option>
+                                                    <option value="REJECTED" th:selected="${app.status == 'REJECTED'}">Reject</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Post Job Modal -->
+    <div class="modal fade" id="postJobModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form th:action="@{/recruiter/job/create}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Post Campus Job Opening</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Job Title</label>
+                                <input type="text" name="title" class="form-control" required placeholder="Java Backend Engineer">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Company Name</label>
+                                <input type="text" name="company" class="form-control" required th:value="${recruiter.companyName}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Role Category</label>
+                                <select name="roleCategory" class="form-select" required>
+                                    <option value="Software Engineer">Software Engineer</option>
+                                    <option value="Java Developer" selected>Java Developer</option>
+                                    <option value="Full Stack Developer">Full Stack Developer</option>
+                                    <option value="Backend Developer">Backend Developer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Location</label>
+                                <input type="text" name="location" class="form-control" required placeholder="Bangalore (Hybrid)">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Salary Package Offered</label>
+                                <input type="text" name="packageOffered" class="form-control" required placeholder="₹8.0 - ₹12 LPA">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Required Skills (Comma Separated)</label>
+                                <input type="text" name="requiredSkills" class="form-control" required placeholder="Java, Spring Boot, MySQL, REST APIs">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Job Description</label>
+                                <textarea name="description" class="form-control" rows="4" required placeholder="Role responsibilities and eligibility criteria..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Publish Job Opening</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inspect Candidate Modal -->
+    <div class="modal fade" id="inspectCandidateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="fw-bold mb-0" id="candModalName">Candidate Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="display-4 fw-bold text-success mb-1" id="candModalScore">85 / 100</div>
+                    <div class="text-muted mb-3">Placement Readiness Score</div>
+                    <div class="p-3 bg-light-subtle rounded text-start">
+                        <p class="mb-1"><strong>Branch:</strong> <span id="candModalBranch">CS</span></p>
+                        <p class="mb-1"><strong>CGPA:</strong> <span id="candModalCgpa">8.8</span></p>
+                        <p class="mb-0"><strong>Readiness Status:</strong> <span class="badge bg-success">Placement Ready</span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Restore active tab from URL hash if present
+            if (window.location.hash) {
+                const targetBtn = document.querySelector(`button[data-bs-target="${window.location.hash}"]`);
+                if (targetBtn) {
+                    const tab = new bootstrap.Tab(targetBtn);
+                    tab.show();
+                }
+            }
+
+            // Sync hash on tab switch
+            document.querySelectorAll('#recruiterTabs button').forEach(btn => {
+                btn.addEventListener('shown.bs.tab', (e) => {
+                    const target = e.target.getAttribute('data-bs-target');
+                    if (target) {
+                        history.replaceState(null, null, target);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.cand-inspect-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget;
+                    document.getElementById('candModalName').innerText = target.getAttribute('data-name');
+                    document.getElementById('candModalBranch').innerText = target.getAttribute('data-branch');
+                    document.getElementById('candModalCgpa').innerText = target.getAttribute('data-cgpa');
+                    document.getElementById('candModalScore').innerText = target.getAttribute('data-score') + ' / 100';
+                    const modal = new bootstrap.Modal(document.getElementById('inspectCandidateModal'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

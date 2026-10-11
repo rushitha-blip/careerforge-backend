@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerForge AI - Intelligent Career Development &amp; Talent Discovery Platform</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+    <!-- Animated Mesh Background -->
+    <div class="bg-mesh"></div>
+
+    <!-- Master Unified Header Navbar -->
+    <nav class="navbar navbar-expand-xl navbar-master sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="fas fa-brain text-primary fa-xl"></i>
+                <span class="brand-badge">CareerForge AI</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#masterNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="masterNav">
+                <!-- Role Selector Switcher Pill Bar -->
+                <div class="mx-auto my-2 my-xl-0">
+                    <div class="role-pill-container">
+                        <button class="role-pill-btn active-student" id="roleBtnStudent" onclick="switchActiveRole('STUDENT')">
+                            <i class="fas fa-user-graduate"></i> Student Portal
+                        </button>
+                        <button class="role-pill-btn" id="roleBtnRecruiter" onclick="switchActiveRole('RECRUITER')">
+                            <i class="fas fa-building"></i> Recruiter Talent Hub
+                        </button>
+                        <button class="role-pill-btn" id="roleBtnAdmin" onclick="switchActiveRole('ADMIN')">
+                            <i class="fas fa-chart-pie"></i> Placement Analytics
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#demoSelectModal">
+                        <i class="fas fa-bolt text-warning me-1"></i> Quick Demo Accounts
+                    </button>
+                    <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#authModal">
+                        <i class="fas fa-lock me-1"></i> Sign In / Register
+                    </button>
+                    <!-- Live Notification Bell Button -->
+                    <button class="btn btn-outline-secondary btn-sm rounded-circle position-relative p-2" data-bs-toggle="modal" data-bs-target="#notificationCenterModal" title="Live Notification Center">
+                        <i class="fas fa-bell text-warning"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadgeCount" style="font-size: 0.65rem;">
+                            3
+                        </span>
+                    </button>
+                    <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Master Hero Banner Section -->
+    <section class="py-5 text-center position-relative">
+        <div class="container">
+            <div class="badge-pillar badge-ready-glow mb-3 d-inline-flex align-items-center gap-2">
+                <i class="fas fa-sparkles"></i> Intelligent Campus Placement &amp; Talent Discovery Platform
+            </div>
+            <h1 class="hero-title-mega max-w-900 mx-auto">
+                Transforming Students into <span class="gradient-text-glow">Industry-Ready</span> Professionals
+            </h1>
+            <p class="fs-5 text-secondary max-w-750 mx-auto mt-3">
+                Data-driven Skill Gap Analysis, Placement Readiness Scoring, ATS Resume Evaluation, and Recruiter Candidate Ranking in one unified platform.
+            </p>
+
+            <div class="d-flex justify-content-center gap-3 mt-4 mb-4">
+                <button class="btn btn-mega btn-lg" onclick="switchActiveRole('STUDENT')"><i class="fas fa-rocket me-2"></i> Get Started Free</button>
+                <a href="#features-showcase" class="btn btn-outline-primary btn-lg rounded-pill px-4"><i class="fas fa-layer-group me-2"></i> Explore Features</a>
+            </div>
+
+            <!-- Live Real-Time Platform Statistics Bar -->
+            <div class="row g-3 mt-4 max-w-900 mx-auto">
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="display-6 fw-bold text-primary" th:text="${adminMetrics.totalStudents}">3</div>
+                        <div class="small text-secondary fw-semibold">Enrolled Candidates</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="display-6 fw-bold text-info" th:text="${adminMetrics.totalRecruiters}">1</div>
+                        <div class="small text-secondary fw-semibold">Recruiting Companies</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="display-6 fw-bold text-success" th:text="${adminMetrics.totalJobs}">3</div>
+                        <div class="small text-secondary fw-semibold">Open Campus Drives</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="display-6 fw-bold text-warning" th:text="${adminMetrics.averageReadinessScore} + '%'">78.4%</div>
+                        <div class="small text-secondary fw-semibold">Avg Readiness Score</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- UNIFIED PLATFORM WORKSPACE CONTAINER -->
+    <div class="container-fluid px-4 pb-5">
+
+        <!-- ======================================================================= -->
+        <!-- 1. STUDENT ECOSYSTEM WORKSPACE (VISIBLE WHEN STUDENT ROLE ACTIVE)        -->
+        <!-- ======================================================================= -->
+        <div id="studentWorkspace">
+
+            <!-- Student Workspace Tab Header -->
+            <div class="d-flex flex-wrap gap-2 mb-4 border-bottom pb-3 justify-content-center" id="studentSubNav">
+                <button class="nav-master-tab active" onclick="showStudentSubTab('overview')"><i class="fas fa-chart-line"></i> Placement Readiness</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('skillgap')"><i class="fas fa-chart-radar"></i> Skill Gap Analyzer</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('advisor')"><i class="fas fa-compass"></i> Career Advisor</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('roadmap')"><i class="fas fa-route"></i> Learning Roadmap</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('resume')"><i class="fas fa-file-contract"></i> Resume Studio (ATS)</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('interview')"><i class="fas fa-laptop-code"></i> Mock Interview</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('jobs')"><i class="fas fa-briefcase"></i> Job Matcher</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('profile')"><i class="fas fa-id-card"></i> Student Profile</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('leaderboard')"><i class="fas fa-trophy"></i> Leaderboard &amp; Badges</button>
+                <button class="nav-master-tab" onclick="showStudentSubTab('coding')"><i class="fas fa-code text-warning"></i> Coding Arena</button>
+            </div>
+
+            <!-- Student Sub-Tabs -->
+            <!-- 1.1 Placement Readiness Score View -->
+            <div id="studentSub-overview" class="student-sub-view">
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-4">
+                        <div class="card-master p-4 text-center h-100">
+                            <h5 class="fw-bold mb-3">Placement Readiness Score</h5>
+                            <div class="gauge-circle-master mb-3" th:style="'--score:' + ${readiness.totalScore}">
+                                <div class="gauge-circle-inner">
+                                    <span class="score-display-num" th:text="${readiness.totalScore}">83</span>
+                                    <span class="small text-muted">/ 100</span>
+                                </div>
+                            </div>
+                            <span class="badge-pillar badge-ready-glow mt-2" th:text="${readiness.status}">Placement Ready</span>
+                            <p class="small text-secondary mt-3 mb-0">Dynamic score evaluated across 5 weighted pillars</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div class="card-master p-4 h-100">
+                            <h5 class="fw-bold mb-3">5 Pillar Readiness Breakdown</h5>
+                            <div class="row g-3">
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                        <div class="small text-muted">Technical Skills (40%)</div>
+                                        <h3 class="fw-bold text-primary mb-0"><span th:text="${readiness.techSkillScore}">35</span><small class="fs-6 text-muted">/40</small></h3>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                        <div class="small text-muted">Projects (20%)</div>
+                                        <h3 class="fw-bold text-success mb-0"><span th:text="${readiness.projectScore}">18</span><small class="fs-6 text-muted">/20</small></h3>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                        <div class="small text-muted">Resume Quality (15%)</div>
+                                        <h3 class="fw-bold text-info mb-0"><span th:text="${readiness.resumeScore}">13</span><small class="fs-6 text-muted">/15</small></h3>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                        <div class="small text-muted">Certifications (15%)</div>
+                                        <h3 class="fw-bold text-warning mb-0"><span th:text="${readiness.certScore}">10</span><small class="fs-6 text-muted">/15</small></h3>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                        <div class="small text-muted">Mock Interview (10%)</div>
+                                        <h3 class="fw-bold text-danger mb-0"><span th:text="${readiness.interviewScore}">8</span><small class="fs-6 text-muted">/10</small></h3>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                        <div class="small text-muted">Profile Complete</div>
+                                        <h3 class="fw-bold text-dark mb-0">90%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="fw-bold text-warning mb-2"><i class="fas fa-lightbulb me-1"></i> Key Actions to Improve Your Score:</h6>
+                                <ul class="small text-secondary mb-0 ps-3">
+                                    <li th:each="fb : ${readiness.feedbackItems}" th:text="${fb}">Feedback item</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card-master p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">Verified Student Skills (<span th:text="${studentSkills.size()}">6</span>)</h5>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addSkillModal">+ Add Skill</button>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-primary-subtle text-primary p-2 border" th:each="ss : ${studentSkills}">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    <span th:text="${ss.skill.name}">Java</span> 
+                                    <small class="opacity-75" th:text="'(' + ${ss.proficiency} + ')'"></small>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card-master p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">Featured Projects (<span th:text="${projects.size()}">2</span>)</h5>
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">+ Add Project</button>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item bg-transparent px-0" th:each="proj : ${projects}">
+                                    <div class="fw-bold" th:text="${proj.title}">E-Commerce API</div>
+                                    <p class="small text-secondary mb-1" th:text="${proj.description}">Desc</p>
+                                    <span class="badge bg-secondary-subtle text-dark border" th:text="${proj.techStack}">Java, Spring</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.2 Skill Gap View -->
+            <div id="studentSub-skillgap" class="student-sub-view d-none">
+                <div class="card-master p-4 mb-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                        <div>
+                            <h4 class="fw-bold mb-1">Target Role Skill Gap Analyzer</h4>
+                            <p class="text-secondary mb-0">Compare your skills against required industry role benchmarks</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="fw-semibold text-nowrap">Target Role:</label>
+                            <select id="targetRoleSelect" class="form-select" onchange="updateSkillGapAnalysis()">
+                                <option value="Full Stack Developer" selected>Full Stack Developer</option>
+                                <option value="Java Developer">Java Developer</option>
+                                <option value="Software Engineer">Software Engineer</option>
+                                <option value="Backend Developer">Backend Developer</option>
+                                <option value="Data Scientist">Data Scientist</option>
+                                <option value="AI Engineer">AI Engineer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 align-items-center">
+                        <div class="col-md-5 text-center">
+                            <div class="p-4 border rounded-4 bg-light-subtle">
+                                <h6 class="text-muted">Target Skill Match %</h6>
+                                <div class="display-2 fw-bold text-primary my-2" id="skillMatchPercent" th:text="${skillGap.matchPercentage} + '%'">80%</div>
+                                <span class="badge bg-success" id="matchBadge">High Target Match</span>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <h6 class="fw-bold">Missing Required Industry Skills:</h6>
+                            <div id="missingSkillsBox" class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-danger-subtle text-danger p-2 fs-6 border" th:each="m : ${skillGap.missingSkills}" th:text="${m}">Spring Boot</span>
+                            </div>
+                            <h6 class="fw-bold mt-3">Action Recommendations:</h6>
+                            <ul id="recommendationsList" class="text-secondary small">
+                                <li th:each="r : ${skillGap.recommendations}" th:text="${r}">Prerequisite recommendation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Skill Competency Radar Graph -->
+                    <div class="p-4 mt-4 border rounded-4 bg-light-subtle">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1"><i class="fas fa-chart-radar text-info me-2"></i> Interactive Skill Competency Radar Graph</h5>
+                                <p class="small text-secondary mb-0">Multi-dimensional visual benchmark: Your Verified Skill Mastery vs. Industry Target Standard.</p>
+                            </div>
+                            <span class="badge bg-primary-subtle text-primary border p-2">
+                                <i class="fas fa-sync-alt fa-spin me-1"></i> Live Chart.js Radar
+                            </span>
+                        </div>
+                        <div style="height: 380px;" class="position-relative">
+                            <canvas id="skillRadarCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.3 Career Advisor View -->
+            <div id="studentSub-advisor" class="student-sub-view d-none">
+                <div class="card-master p-4 mb-4">
+                    <h4 class="fw-bold mb-3"><i class="fas fa-compass text-primary me-2"></i> Algorithmic Career Advisor</h4>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-primary mb-3">Recommended Career Roles</h5>
+                            <div class="list-group">
+                                <div class="list-group-item card-master mb-2" th:each="role : ${guidance.recommendedRoles}">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="fw-bold" th:text="${role.title}">Java Full Stack Developer</h6>
+                                        <span class="badge bg-success" th:text="${role.matchScore}">88% Match</span>
+                                    </div>
+                                    <small class="text-secondary" th:text="'Demand: ' + ${role.demand} + ' | Salary: ' + ${role.avgSalary}"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="fw-bold text-success mb-3">Suggested Learning &amp; Certifications</h5>
+                            <div class="border rounded-4 p-3 mb-3 bg-light-subtle">
+                                <h6>Recommended Certifications:</h6>
+                                <ul class="small text-secondary mb-0">
+                                    <li th:each="c : ${guidance.suggestedCerts}" th:text="${c}">AWS Certified Developer</li>
+                                </ul>
+                            </div>
+                            <div class="border rounded-4 p-3 bg-light-subtle">
+                                <h6>Suggested Tech Stack:</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-info-subtle text-info border" th:each="t : ${guidance.suggestedTech}" th:text="${t}">Microservices</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.4 Learning Roadmap View -->
+            <div id="studentSub-roadmap" class="student-sub-view d-none">
+                <div class="card-master p-4">
+                    <h4 class="fw-bold mb-2">Visual Learning Roadmap Timeline</h4>
+                    <p class="text-secondary">Target Goal: <span class="fw-bold text-primary" th:text="${studentProfile.careerGoal}">Full Stack Developer</span></p>
+
+                    <div class="timeline-master mt-4">
+                        <div class="step-node-item">
+                            <div class="step-node-badge">1</div>
+                            <div class="card-master p-3">
+                                <h6 class="fw-bold mb-1 text-success"><i class="fas fa-check-circle me-1"></i> Step 1: Java Core &amp; Object Oriented Programming</h6>
+                                <p class="small text-secondary mb-0">Master classes, objects, interfaces, inheritance, collection framework, and memory model.</p>
+                            </div>
+                        </div>
+                        <div class="step-node-item">
+                            <div class="step-node-badge">2</div>
+                            <div class="card-master p-3">
+                                <h6 class="fw-bold mb-1 text-success"><i class="fas fa-check-circle me-1"></i> Step 2: Relational Databases &amp; SQL</h6>
+                                <p class="small text-secondary mb-0">Master MySQL schema design, indexing, DDL/DML queries, joins, and transactions.</p>
+                            </div>
+                        </div>
+                        <div class="step-node-item">
+                            <div class="step-node-badge">3</div>
+                            <div class="card-master p-3">
+                                <h6 class="fw-bold mb-1 text-primary"><i class="fas fa-spinner fa-spin me-1"></i> Step 3: Spring Boot 3 &amp; RESTful APIs</h6>
+                                <p class="small text-secondary mb-0">Build enterprise RESTful microservices, Spring Data JPA, and security authentication.</p>
+                            </div>
+                        </div>
+                        <div class="step-node-item">
+                            <div class="step-node-badge">4</div>
+                            <div class="card-master p-3">
+                                <h6 class="fw-bold mb-1 text-secondary">Step 4: Modern Web Frontend (HTML5, CSS3, JavaScript)</h6>
+                                <p class="small text-secondary mb-0">Build responsive SaaS web user interfaces, Bootstrap 5, AJAX, and Chart.js integration.</p>
+                            </div>
+                        </div>
+                        <div class="step-node-item">
+                            <div class="step-node-badge">5</div>
+                            <div class="card-master p-3">
+                                <h6 class="fw-bold mb-1 text-secondary">Step 5: Cloud Deployment &amp; DevOps</h6>
+                                <p class="small text-secondary mb-0">Deploy Spring Boot applications to AWS/Cloud using Docker containers and CI/CD pipelines.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.5 Resume Studio View -->
+            <div id="studentSub-resume" class="student-sub-view d-none">
+                <div class="card-master p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0">ATS Resume Builder &amp; Evaluator</h4>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#a4ResumeModal"><i class="fas fa-file-alt me-1"></i> Preview Clean A4 Resume</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Quick Print</button>
+                            <button class="btn btn-mega btn-sm" onclick="evaluateResumeAtsScore()"><i class="fas fa-sync me-1"></i> Recalculate ATS Score</button>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Professional Summary</label>
+                                <textarea id="resumeSummaryInput" class="form-control" rows="4" th:text="${resume.summary}"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Technical Keywords (Comma Separated)</label>
+                                <input type="text" id="resumeSkillsInput" class="form-control" th:value="${resume.skillsCsv}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card-master p-4 bg-light-subtle h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold mb-0">ATS Compatibility Index</h6>
+                                    <span id="atsScoreBadge" class="badge bg-success fs-5" th:text="${resume.atsScore} + ' / 100'">88 / 100</span>
+                                </div>
+                                <div class="progress mb-3" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" th:style="'width:' + ${resume.atsScore} + '%'"></div>
+                                </div>
+                                <h6 class="fw-bold mb-1">ATS Optimization Tips:</h6>
+                                <p id="atsSuggestionsBox" class="small text-secondary mb-0" th:text="${resume.atsSuggestions}">Optimized resume formatting.</p>
+
+                                <div class="border p-3 bg-white rounded mt-3 text-dark">
+                                    <h6 class="fw-bold mb-1" th:text="${currentUser.name}">Rahul Sharma</h6>
+                                    <small class="text-muted" th:text="${currentUser.email} + ' | ' + ${studentProfile.branch}"></small>
+                                    <hr class="my-2">
+                                    <p id="previewSummary" class="small mb-2" th:text="${resume.summary}">Summary text...</p>
+                                    <div class="small fw-bold">Skills:</div>
+                                    <p id="previewSkills" class="small text-muted mb-0" th:text="${resume.skillsCsv}">Skills CSV</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.6 Mock Interview View -->
+            <div id="studentSub-interview" class="student-sub-view d-none">
+                <div class="card-master p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h4 class="fw-bold mb-1">Timed Mock Interview Engine</h4>
+                            <p class="text-secondary mb-0">Simulate real campus interview screening quizzes</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-mega" onclick="startMockInterview('TECHNICAL')"><i class="fas fa-play me-1"></i> Start Technical Quiz</button>
+                            <button class="btn btn-outline-secondary" onclick="startMockInterview('HR')">HR Quiz</button>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Interview History Log</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Overall Score</th>
+                                    <th>Technical</th>
+                                    <th>HR</th>
+                                    <th>Weak Areas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="mi : ${interviewHistory}">
+                                    <td th:text="${#temporals.format(mi.takenAt, 'dd MMM yyyy HH:mm')}">Date</td>
+                                    <td><span class="badge bg-primary" th:text="${mi.category}">TECHNICAL</span></td>
+                                    <td class="fw-bold text-success" th:text="${mi.overallScore} + '%'">85%</td>
+                                    <td th:text="${mi.technicalScore} + '%'">90%</td>
+                                    <td th:text="${mi.hrScore} + '%'">80%</td>
+                                    <td class="small text-secondary" th:text="${mi.weakAreas}">Weak areas</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.7 Job Recommendation View -->
+            <div id="studentSub-jobs" class="student-sub-view d-none">
+                <div class="card-master p-4">
+                    <h4 class="fw-bold mb-3">Smart Job Matching Engine</h4>
+                    <div class="row g-4">
+                        <div class="col-md-6" th:each="jm : ${recommendedJobs}">
+                            <div class="card-master p-4 h-100">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h5 class="fw-bold mb-1" th:text="${jm.job.title}">Java Developer</h5>
+                                        <div class="text-secondary fw-medium" th:text="${jm.job.company}">TechCorp Solutions</div>
+                                    </div>
+                                    <span class="badge bg-success fs-6" th:text="${jm.matchPercentage} + '% Match'">88% Match</span>
+                                </div>
+
+                                <div class="small text-muted mb-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i> <span th:text="${jm.job.location}">Bangalore</span> | 
+                                    <i class="fas fa-money-bill-wave me-1"></i> <span th:text="${jm.job.packageOffered}">₹8 - ₹12 LPA</span>
+                                </div>
+
+                                <p class="small text-secondary mb-3" th:text="${jm.job.description}">Desc</p>
+
+                                <form th:action="@{'/student/job/apply/' + ${jm.job.id}}" method="post">
+                                    <button type="submit" class="btn btn-mega w-100" th:disabled="${jm.applied}">
+                                        <span th:if="${jm.applied}"><i class="fas fa-check me-1"></i> Applied</span>
+                                        <span th:unless="${jm.applied}">Apply Now <i class="fas fa-paper-plane ms-1"></i></span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.8 Student Profile Sub-Tab -->
+            <div id="studentSub-profile" class="student-sub-view d-none">
+                <div class="card-master p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                        <div>
+                            <h4 class="fw-bold mb-1">Student Profile Details</h4>
+                            <p class="text-secondary mb-0">Manage your academic CGPA, branch, career goal, and social links</p>
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fas fa-edit me-1"></i> Edit Profile Details
+                        </button>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-4 text-center">
+                            <div class="p-4 border rounded-4 bg-light-subtle">
+                                <div class="display-1 text-primary mb-2"><i class="fas fa-user-circle"></i></div>
+                                <h4 class="fw-bold mb-1" th:text="${currentUser.name}">Rahul Sharma</h4>
+                                <span class="badge bg-primary mb-3" th:text="${studentProfile.branch}">Computer Science</span>
+                                <p class="small text-secondary mb-2" th:text="${currentUser.email}">rahul@example.com</p>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a th:href="${studentProfile.githubUrl}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="fab fa-github me-1"></i> GitHub</a>
+                                    <a th:href="${studentProfile.linkedinUrl}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fab fa-linkedin me-1"></i> LinkedIn</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="p-3 border rounded-4 bg-light-subtle">
+                                        <small class="text-muted">Academic CGPA</small>
+                                        <h3 class="fw-bold text-success mb-0" th:text="${studentProfile.cgpa}">8.8</h3>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 border rounded-4 bg-light-subtle">
+                                        <small class="text-muted">Academic Year</small>
+                                        <h3 class="fw-bold text-info mb-0" th:text="${studentProfile.year}">4th Year</h3>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-3 border rounded-4 bg-light-subtle">
+                                        <small class="text-muted">Target Career Goal</small>
+                                        <h4 class="fw-bold text-primary mb-0" th:text="${studentProfile.careerGoal}">Full Stack Developer</h4>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-3 border rounded-4 bg-light-subtle">
+                                        <small class="text-muted">About Me &amp; Professional Bio</small>
+                                        <p class="mb-0 text-secondary" th:text="${studentProfile.bio}">Bio description...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1.9 Leaderboard & Badges Sub-Tab -->
+            <div id="studentSub-leaderboard" class="student-sub-view d-none">
+                <div class="card-master p-4 mb-4">
+                    <h4 class="fw-bold mb-3"><i class="fas fa-trophy text-warning me-2"></i> Campus Leaderboard &amp; Achievement Badges</h4>
+
+                    <!-- Badges Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                <div class="display-4 text-warning mb-1"><i class="fas fa-medal"></i></div>
+                                <h6 class="fw-bold mb-0">Java Champion</h6>
+                                <small class="text-muted">Verified Java Mastery</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                <div class="display-4 text-primary mb-1"><i class="fas fa-award"></i></div>
+                                <h6 class="fw-bold mb-0">ATS Resume Pro</h6>
+                                <small class="text-muted">ATS Score &gt; 85%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                <div class="display-4 text-success mb-1"><i class="fas fa-star"></i></div>
+                                <h6 class="fw-bold mb-0">Interview Ace</h6>
+                                <small class="text-muted">Quiz Score &gt; 80%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="p-3 border rounded-4 bg-light-subtle text-center">
+                                <div class="display-4 text-info mb-1"><i class="fas fa-shield-alt"></i></div>
+                                <h6 class="fw-bold mb-0">Cloud Certified</h6>
+                                <small class="text-muted">AWS Credential</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Top Student Readiness Ranking</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Student</th>
+                                    <th>Branch</th>
+                                    <th>CGPA</th>
+                                    <th>Readiness Score</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="c, iter : ${candidates}">
+                                    <td class="fw-bold text-warning" th:text="'#' + ${iter.count}">#1</td>
+                                    <td>
+                                        <div class="fw-bold" th:text="${c.user.name}">Rahul Sharma</div>
+                                        <small class="text-muted" th:text="${c.user.email}">email</small>
+                                    </td>
+                                    <td><span class="badge bg-secondary" th:text="${c.branch}">CS</span></td>
+                                    <td class="fw-bold text-primary" th:text="${c.cgpa}">8.8</td>
+                                    <td class="fw-bold text-success fs-5" th:text="${c.readinessScore} + ' / 100'">83 / 100</td>
+                                    <td><span class="badge-pillar badge-ready-glow">Placement Ready</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+            <!-- 1.10 In-Browser Coding Arena (LeetCode Sandbox Simulator) -->
+            <div id="studentSub-coding" class="student-sub-view d-none">
+                <div class="card-master p-4 mb-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 border-bottom pb-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h4 class="fw-bold mb-0"><i class="fas fa-terminal text-warning me-2"></i> In-Browser Java Coding Arena</h4>
+                                <span class="badge bg-warning text-dark"><i class="fas fa-fire me-1"></i> Technical Round Sandbox</span>
+                            </div>
+                            <p class="text-secondary small mb-0">Simulates campus technical round coding environments (LeetCode / HackerRank style).</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="fw-semibold small text-nowrap">Select Problem:</label>
+                            <select id="codingProblemSelect" class="form-select form-select-sm" onchange="loadCodingProblem(this.value)">
+                                <option value="two-sum" selected>Two Sum (LeetCode #1 - Easy)</option>
+                                <option value="valid-parentheses">Valid Parentheses (LeetCode #20 - Easy)</option>
+                                <option value="reverse-string">Reverse String (Two Pointers - Easy)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Problem Statement -->
+                        <div class="col-lg-5">
+                            <div class="p-3 border rounded-4 bg-light-subtle h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="fw-bold mb-0" id="problemTitleDisplay">Two Sum (LeetCode #1)</h5>
+                                    <span class="badge bg-success" id="problemDifficultyBadge">EASY</span>
+                                </div>
+                                <div id="problemTagsContainer" class="mb-3">
+                                    <span class="badge bg-secondary-subtle text-secondary me-1 border">Arrays</span>
+                                    <span class="badge bg-secondary-subtle text-secondary me-1 border">Hash Table</span>
+                                </div>
+                                <h6 class="fw-bold small text-muted text-uppercase mb-2">Problem Description</h6>
+                                <p class="small text-secondary" id="problemDescText">
+                                    Given an array of integers <code>nums</code> and an integer <code>target</code>, return indices of the two numbers such that they add up to <code>target</code>.
+                                </p>
+                                <h6 class="fw-bold small text-muted text-uppercase mb-2">Test Examples</h6>
+                                <div id="problemExamplesContainer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Java Code Editor & Console Output -->
+                        <div class="col-lg-7">
+                            <div class="p-3 border rounded-4 bg-dark h-100 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                                    <div class="small fw-bold text-light"><i class="fab fa-java text-danger me-1"></i> Solution.java (Java 21)</div>
+                                    <div id="testCasesStatus"></div>
+                                </div>
+
+                                <textarea id="javaCodeEditor" class="form-control font-monospace bg-dark text-light border-0 mb-3" rows="11" style="resize: vertical; font-size: 0.88rem; line-height: 1.45;"></textarea>
+
+                                <div class="d-flex gap-2 mb-3">
+                                    <button class="btn btn-outline-light btn-sm" onclick="runSampleTestCases()"><i class="fas fa-play me-1"></i> Run Sample Test Cases</button>
+                                    <button class="btn btn-success btn-sm flex-grow-1" onclick="submitCodingSolution()"><i class="fas fa-paper-plane me-1"></i> Submit Solution</button>
+                                </div>
+
+                                <div class="border rounded p-2 bg-black text-light font-monospace small flex-grow-1" style="min-height: 110px;" id="codeConsoleOutput">
+                                    <span class="text-muted">// Ready to compile and run test cases...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- ======================================================================= -->
+        <!-- 2. RECRUITER TALENT HUB WORKSPACE (VISIBLE WHEN RECRUITER ACTIVE)       -->
+        <!-- ======================================================================= -->
+        <div id="recruiterWorkspace" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div>
+                    <h3 class="fw-bold mb-1">Recruiter Talent Discovery Command Center</h3>
+                    <p class="text-secondary mb-0">Company: <span class="fw-bold text-success" th:text="${recruiterProfile.companyName}">TechCorp</span> | Location: <span th:text="${recruiterProfile.location}">Bangalore</span></p>
+                </div>
+                <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                    <i class="fas fa-plus me-1"></i> Post Job Opening
+                </button>
+            </div>
+
+            <!-- Filter Toolbar -->
+            <div class="card-master p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-filter text-primary me-2"></i> Talent Discovery Filters</h5>
+                <form th:action="@{/recruiter/dashboard}" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Skill Tag</label>
+                        <input type="text" name="skillFilter" class="form-control" placeholder="e.g. Java">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Academic Branch</label>
+                        <select name="branchFilter" class="form-select">
+                            <option value="">All Branches</option>
+                            <option value="Computer Science & Engg">Computer Science &amp; Engg</option>
+                            <option value="Information Technology">Information Technology</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Min CGPA</label>
+                        <input type="number" step="0.1" name="minCgpa" class="form-control" placeholder="7.5">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-mega w-100"><i class="fas fa-search me-1"></i> Filter Candidates</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Candidate Pool Table -->
+            <div class="card-master p-4">
+                <h5 class="fw-bold mb-3">Ranked Candidate Pool (<span th:text="${candidates.size()}">3</span>)</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Candidate</th>
+                                <th>Branch</th>
+                                <th>CGPA</th>
+                                <th>Readiness Score</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="c, iter : ${candidates}">
+                                <td class="fw-bold text-muted" th:text="'#' + ${iter.count}">#1</td>
+                                <td>
+                                    <div class="fw-bold" th:text="${c.user.name}">Rahul Sharma</div>
+                                    <small class="text-muted" th:text="${c.user.email}">email</small>
+                                </td>
+                                <td><span class="badge bg-secondary" th:text="${c.branch}">CS</span></td>
+                                <td class="fw-bold text-primary" th:text="${c.cgpa}">8.8</td>
+                                <td class="fw-bold text-success fs-5" th:text="${c.readinessScore} + ' / 100'">83 / 100</td>
+                                <td><span class="badge-pillar badge-ready-glow">Placement Ready</span></td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm cand-inspect-btn"
+                                            th:data-name="${c.user.name}"
+                                            th:data-branch="${c.branch}"
+                                            th:data-cgpa="${c.cgpa}"
+                                            th:data-score="${c.readinessScore}">
+                                        Inspect Profile
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ======================================================================= -->
+        <!-- 3. UNIVERSITY ADMIN WORKSPACE (VISIBLE WHEN ADMIN ACTIVE)               -->
+        <!-- ======================================================================= -->
+        <div id="adminWorkspace" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div>
+                    <h3 class="fw-bold mb-1">University Administration &amp; Placement Analytics</h3>
+                    <p class="text-secondary mb-0">Campus Placement Ecosystem Performance</p>
+                </div>
+                <button class="btn btn-outline-secondary" onclick="window.print()"><i class="fas fa-download me-1"></i> Export Placement Report</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="small text-muted mb-1">Total Students</div>
+                        <h2 class="fw-bold text-primary mb-0" th:text="${adminMetrics.totalStudents}">2</h2>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="small text-muted mb-1">Total Recruiters</div>
+                        <h2 class="fw-bold text-success mb-0" th:text="${adminMetrics.totalRecruiters}">1</h2>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="small text-muted mb-1">Active Job Listings</div>
+                        <h2 class="fw-bold text-info mb-0" th:text="${adminMetrics.totalJobs}">3</h2>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card-master p-3 text-center">
+                        <div class="small text-muted mb-1">Avg Placement Score</div>
+                        <h2 class="fw-bold text-warning mb-0" th:text="${adminMetrics.averageReadinessScore} + ' / 100'">78.4 / 100</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Graph -->
+            <div class="card-master p-4 mb-4">
+                <h5 class="fw-bold mb-3">Campus Placement Readiness Score Trend</h5>
+                <div style="height: 320px;">
+                    <canvas id="adminTrendCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ======================================================================= -->
+    <!-- 4. FEATURES SHOWCASE & WORKFLOW SECTION                                -->
+    <!-- ======================================================================= -->
+    <section id="features-showcase" class="py-5 bg-dark-subtle border-top border-bottom">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="badge bg-primary mb-2">Platform Capabilities</span>
+                <h2 class="fw-bold display-5">Designed for Outstanding Placement Success</h2>
+                <p class="text-secondary max-w-700 mx-auto">Combining AI analytics, skill gap evaluations, and recruiter talent discovery in one place.</p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card-master p-4 h-100">
+                        <div class="display-5 text-primary mb-3"><i class="fas fa-chart-line"></i></div>
+                        <h5 class="fw-bold mb-2">Readiness Score Engine</h5>
+                        <p class="text-secondary small">Evaluates student profile across 5 weighted pillars: Tech Skills, Projects, Resume, Certifications, and Mock Interview performance.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-master p-4 h-100">
+                        <div class="display-5 text-info mb-3"><i class="fas fa-chart-radar"></i></div>
+                        <h5 class="fw-bold mb-2">Target Role Skill Gap Analyzer</h5>
+                        <p class="text-secondary small">Benchmarks student technical skills against target roles (Java Full Stack, Data Scientist, Backend Engineer) and calculates skill match %.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-master p-4 h-100">
+                        <div class="display-5 text-success mb-3"><i class="fas fa-file-contract"></i></div>
+                        <h5 class="fw-bold mb-2">ATS Resume Studio</h5>
+                        <p class="text-secondary small">Parses resume summary and technical keywords to output a 0-100 ATS compatibility index score with real-time feedback.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-master p-4 h-100">
+                        <div class="display-5 text-warning mb-3"><i class="fas fa-laptop-code"></i></div>
+                        <h5 class="fw-bold mb-2">Timed Mock Interview Engine</h5>
+                        <p class="text-secondary small">Simulates technical screening quizzes with countdown timers, instant grading, weak-area detection, and history tracking.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-master p-4 h-100">
+                        <div class="display-5 text-danger mb-3"><i class="fas fa-building"></i></div>
+                        <h5 class="fw-bold mb-2">Recruiter Talent Discovery</h5>
+                        <p class="text-secondary small">Allows corporate recruiters to search, rank, filter, inspect, and shortlist student candidates based on placement readiness scores.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-master p-4 h-100">
+                        <div class="display-5 text-purple mb-3"><i class="fas fa-chart-pie"></i></div>
+                        <h5 class="fw-bold mb-2">University Placement Analytics</h5>
+                        <p class="text-secondary small">Provides campus placement officers real-time analytics on student readiness trends, company postings, and skill taxonomies.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Stepper -->
+            <div class="text-center mb-4">
+                <h3 class="fw-bold">How CareerForge AI Works</h3>
+            </div>
+            <div class="row g-3 text-center">
+                <div class="col-md-3">
+                    <div class="p-3 border rounded-4 card-master">
+                        <div class="badge bg-primary rounded-circle mb-2 fs-5">1</div>
+                        <h6 class="fw-bold">Profile &amp; Skill Audit</h6>
+                        <p class="small text-secondary mb-0">Students log in and input academic CGPA, verified skills, and technical projects.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 border rounded-4 card-master">
+                        <div class="badge bg-info rounded-circle mb-2 fs-5">2</div>
+                        <h6 class="fw-bold">AI Skill Gap Analysis</h6>
+                        <p class="small text-secondary mb-0">System benchmarks student skills against target roles and generates customized learning roadmaps.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 border rounded-4 card-master">
+                        <div class="badge bg-warning rounded-circle mb-2 fs-5">3</div>
+                        <h6 class="fw-bold">Resume &amp; Quiz Practice</h6>
+                        <p class="small text-secondary mb-0">Optimize ATS resume score and complete timed technical mock interview quizzes.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 border rounded-4 card-master">
+                        <div class="badge bg-success rounded-circle mb-2 fs-5">4</div>
+                        <h6 class="fw-bold">Recruiter Placement Match</h6>
+                        <p class="small text-secondary mb-0">Recruiters discover top-ranked candidates and extend campus interview invitations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ & Testimonials Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-5">
+                <!-- Testimonials -->
+                <div class="col-lg-6">
+                    <h3 class="fw-bold mb-4"><i class="fas fa-quote-left text-primary me-2"></i> Student Success Stories</h3>
+                    <div class="card-master p-4 mb-3">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="fs-1 text-warning"><i class="fas fa-user-circle"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Rahul Sharma</h6>
+                                <small class="text-success fw-bold">Placed at Amazon @ ₹18 LPA</small>
+                            </div>
+                        </div>
+                        <p class="small text-secondary mb-0">"The Skill Gap Analyzer showed me exactly what Spring Boot concepts I was missing. Following the roadmap boosted my placement readiness score from 62 to 85!"</p>
+                    </div>
+                    <div class="card-master p-4">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="fs-1 text-info"><i class="fas fa-user-circle"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Priya Patel</h6>
+                                <small class="text-info fw-bold">Placed at TCS Digital @ ₹9 LPA</small>
+                            </div>
+                        </div>
+                        <p class="small text-secondary mb-0">"The ATS Resume Evaluator gave instant keyword recommendations that transformed my resume. Highly recommended for every BTech student."</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Accordion -->
+                <div class="col-lg-6">
+                    <h3 class="fw-bold mb-4"><i class="fas fa-question-circle text-info me-2"></i> Frequently Asked Questions</h3>
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item card-master mb-2">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed card-master fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    How is the Placement Readiness Score calculated?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-secondary">
+                                    It evaluates 5 weighted pillars out of 100: Technical Skills (40%), Projects (20%), Resume Quality (15%), Certifications (15%), and Mock Interview Performance (10%).
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item card-master mb-2">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed card-master fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    How does Recruiter Talent Discovery work?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-secondary">
+                                    Recruiters can filter candidate pools by specific skill tags, academic branch, min CGPA, and readiness score, and view candidates ranked descending by score.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item card-master">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed card-master fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Is all functionality integrated into this single website?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body small text-secondary">
+                                    Yes! All student tools, recruiter portals, admin placement analytics, ATS resume scoring, and mock interview quizzes operate seamlessly inside this single application.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 border-top text-center text-secondary small bg-dark-subtle">
+        <div class="container">
+            <p class="mb-1 fw-semibold">CareerForge AI — Intelligent Career Development &amp; Placement Readiness Platform</p>
+            <p class="mb-0 text-muted">&copy; 2026 CareerForge AI. BTech Full Stack Java Project Demonstration.</p>
+        </div>
+    </footer>
+
+
+    <!-- ======================================================================= -->
+
+
+
+    <!-- ======================================================================= -->
+    <!-- CLEAN FORMAL A4 RESUME PREVIEW & PDF DOWNLOAD MODAL                       -->
+    <!-- ======================================================================= -->
+    <div class="modal fade" id="a4ResumeModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content card-master">
+                <div class="modal-header border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-file-alt text-info me-2"></i> Clean Formal A4 Resume Preview</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-white text-dark rounded-bottom" id="a4ResumeDocument" style="font-family: 'Times New Roman', Times, serif; font-size: 14px; line-height: 1.4;">
+                    <!-- Resume Header -->
+                    <div class="text-center border-bottom pb-2 mb-3">
+                        <h2 class="fw-bold text-uppercase mb-1" th:text="${currentUser.name}">Rahul Sharma</h2>
+                        <div class="small">
+                            <span th:text="${currentUser.email}">student@careerforge.ai</span> | 
+                            <span>+91 9876543212</span> | 
+                            <span th:text="${studentProfile.branch} + ', ' + ${studentProfile.year}">Computer Science &amp; Engg, 4th Year</span>
+                        </div>
+                        <div class="small mt-1">
+                            <a th:href="${studentProfile.linkedinUrl}" target="_blank" class="text-primary text-decoration-none me-2">LinkedIn</a> | 
+                            <a th:href="${studentProfile.githubUrl}" target="_blank" class="text-primary text-decoration-none">GitHub</a>
+                        </div>
+                    </div>
+
+                    <!-- Executive Objective -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-1">Executive Summary</h6>
+                        <p class="small mb-0" th:text="${resume.summary}">Passionate Java Full Stack Engineer with expertise in Spring Boot, MySQL, and modern UI development.</p>
+                    </div>
+
+                    <!-- Education -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-1">Education</h6>
+                        <div class="d-flex justify-content-between">
+                            <strong>Bachelor of Technology (B.Tech) - Computer Science &amp; Engineering</strong>
+                            <span>2022 - 2026</span>
+                        </div>
+                        <div class="small text-muted">Cumulative GPA (CGPA): <strong class="text-dark" th:text="${studentProfile.cgpa}">8.8</strong> / 10.0</div>
+                    </div>
+
+                    <!-- Technical Skills -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-1">Technical Skills</h6>
+                        <div class="small">
+                            <strong>Programming Languages:</strong> Java (SE 17/21), SQL, JavaScript, HTML5, CSS3<br>
+                            <strong>Frameworks &amp; Backend:</strong> Spring Boot 3, Spring Data JPA, Hibernate, REST APIs<br>
+                            <strong>Databases &amp; Tools:</strong> MySQL, Git, GitHub, Maven, Docker, Postman
+                        </div>
+                    </div>
+
+                    <!-- Technical Projects -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-1">Technical Portfolio Projects</h6>
+                        <div class="mb-2" th:each="p : ${projects}">
+                            <div class="d-flex justify-content-between">
+                                <strong th:text="${p.title}">E-Commerce Microservices Engine</strong>
+                                <span class="small text-muted" th:text="${p.techStack}">Java, Spring Boot, MySQL</span>
+                            </div>
+                            <p class="small mb-0" th:text="${p.description}">Scalable backend service with JWT authentication and relational persistence.</p>
+                        </div>
+                    </div>
+
+                    <!-- Certifications -->
+                    <div>
+                        <h6 class="fw-bold text-uppercase border-bottom pb-1 mb-1">Certifications &amp; Credentials</h6>
+                        <ul class="small mb-0 ps-3">
+                            <li th:each="cert : ${certs}">
+                                <strong th:text="${cert.title}">AWS Certified Cloud Practitioner</strong> — 
+                                <span th:text="${cert.issuingOrganization}">AWS</span> (<span th:text="${cert.issueDate}">Aug 2025</span>)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer border-top d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" onclick="window.print()"><i class="fas fa-print me-1"></i> Print / Save as PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Live Notification Center Modal -->
+    <div class="modal fade" id="notificationCenterModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-master">
+                <div class="modal-header border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-bell text-warning fa-lg"></i>
+                        <h5 class="fw-bold mb-0">Live Notification Center</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" id="notificationsListContainer" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Rendered by notifications.js -->
+                </div>
+                <div class="modal-footer border-top d-flex justify-content-between">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="markAllNotificationsRead()"><i class="fas fa-check-double me-1"></i> Mark All Read</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearAllNotifications()"><i class="fas fa-trash me-1"></i> Clear</button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="triggerLiveNotificationAlert('Placement Drive Announcement', 'Microsoft has announced campus hiring for SDE roles!', 'info')"><i class="fas fa-paper-plane me-1"></i> Test Alert</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Demo Account Modal -->
+    <div class="modal fade" id="demoSelectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content card-master">
+                <div class="modal-header">
+                    <h5 class="fw-bold mb-0">Select Demo Profile to Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="text-secondary small mb-3">Choose a pre-loaded demo account to explore specific user perspectives:</p>
+                    <div class="d-grid gap-2">
+                        <a href="/demo-login/student" class="btn btn-primary btn-lg"><i class="fas fa-user-graduate me-2"></i> Demo Student (Rahul Sharma)</a>
+                        <a href="/demo-login/recruiter" class="btn btn-success btn-lg"><i class="fas fa-building me-2"></i> Demo Recruiter (TechCorp Global)</a>
+                        <a href="/demo-login/admin" class="btn btn-warning text-dark btn-lg"><i class="fas fa-user-shield me-2"></i> Demo Admin (University Officer)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Login / Register Modal -->
+    <div class="modal fade" id="authModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content card-master">
+                <div class="modal-header">
+                    <h5 class="fw-bold mb-0">Account Sign In</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/login}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" required placeholder="student@careerforge.ai">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-mega w-100">Sign In to CareerForge AI</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Profile Modal -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content card-master">
+                <form th:action="@{/student/profile/update}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold mb-0">Edit Profile Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Academic Branch</label>
+                                <input type="text" name="branch" class="form-control" required th:value="${studentProfile.branch}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Academic Year</label>
+                                <input type="text" name="year" class="form-control" required th:value="${studentProfile.year}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Academic CGPA</label>
+                                <input type="number" step="0.01" name="cgpa" class="form-control" required th:value="${studentProfile.cgpa}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Target Career Goal</label>
+                                <input type="text" name="careerGoal" class="form-control" required th:value="${studentProfile.careerGoal}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">GitHub URL</label>
+                                <input type="url" name="githubUrl" class="form-control" th:value="${studentProfile.githubUrl}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">LinkedIn URL</label>
+                                <input type="url" name="linkedinUrl" class="form-control" th:value="${studentProfile.linkedinUrl}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">About Me &amp; Professional Bio</label>
+                                <textarea name="bio" class="form-control" rows="3" th:text="${studentProfile.bio}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-mega">Save Profile Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals (Skill, Project, Job, Inspect) -->
+    <div class="modal fade" id="addSkillModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content card-master">
+                <form th:action="@{/student/skill/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Add Verified Skill</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Skill Catalog</label>
+                            <select name="skillId" class="form-select" required>
+                                <option th:each="sk : ${globalSkills}" th:value="${sk.id}" th:text="${sk.name} + ' (' + ${sk.category} + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Proficiency Level</label>
+                            <select name="proficiency" class="form-select" required>
+                                <option value="BEGINNER">Beginner</option>
+                                <option value="INTERMEDIATE" selected>Intermediate</option>
+                                <option value="ADVANCED">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-mega">Save Skill</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addProjectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content card-master">
+                <form th:action="@{/student/project/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Add Technical Project</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Project Title</label>
+                            <input type="text" name="title" class="form-control" required placeholder="Placement Platform">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" required placeholder="Features..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tech Stack</label>
+                            <input type="text" name="techStack" class="form-control" required placeholder="Java, Spring Boot, MySQL">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-mega">Save Project</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="postJobModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content card-master">
+                <form th:action="@{/recruiter/job/create}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Post Job Opening</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Job Title</label>
+                                <input type="text" name="title" class="form-control" required placeholder="Java Developer">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" name="company" class="form-control" required value="TechCorp Solutions">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Role Category</label>
+                                <input type="text" name="roleCategory" class="form-control" required value="Full Stack Developer">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Location</label>
+                                <input type="text" name="location" class="form-control" required placeholder="Bangalore">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Package</label>
+                                <input type="text" name="packageOffered" class="form-control" required placeholder="₹8 - ₹12 LPA">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Required Skills</label>
+                                <input type="text" name="requiredSkills" class="form-control" required placeholder="Java, Spring Boot, MySQL">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="3" required placeholder="Responsibilities..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Post Job</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="inspectCandidateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content card-master">
+                <div class="modal-header">
+                    <h5 class="fw-bold mb-0" id="candModalName">Candidate Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="display-3 fw-bold text-success mb-1" id="candModalScore">85 / 100</div>
+                    <div class="text-muted mb-3">Placement Readiness Score</div>
+                    <div class="p-3 bg-light-subtle rounded text-start">
+                        <p class="mb-1"><strong>Branch:</strong> <span id="candModalBranch">CS</span></p>
+                        <p class="mb-1"><strong>CGPA:</strong> <span id="candModalCgpa">8.8</span></p>
+                        <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">Placement Ready</span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="alert('Candidate shortlisted!')">Shortlist Candidate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div class="modal fade" id="mockInterviewModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content card-master">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="fw-bold mb-0">Mock Interview Quiz Simulator</h5>
+                    <div class="badge bg-warning text-dark fs-6" id="quizTimer">10:00</div>
+                </div>
+                <div class="modal-body" id="quizContainer"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success btn-lg w-100" onclick="submitMockInterview()">Submit Quiz Answers</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS & App JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/charts.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:src="@{/js/resume.js}"></script>
+    <script th:src="@{/js/interview.js}"></script>
+    <script th:src="@{/js/coding.js}"></script>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            initAdminTrendChart('adminTrendCanvas');
+            renderSkillRadarChart('skillRadarCanvas', 'Full Stack Developer');
+            
+            // Check role in URL query string e.g. ?activeRole=RECRUITER
+            const urlParams = new URLSearchParams(window.location.search);
+            const roleParam = urlParams.get('activeRole');
+            if (roleParam) {
+                switchActiveRole(roleParam);
+            }
+
+            document.querySelectorAll('.cand-inspect-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget;
+                    document.getElementById('candModalName').innerText = target.getAttribute('data-name');
+                    document.getElementById('candModalBranch').innerText = target.getAttribute('data-branch');
+                    document.getElementById('candModalCgpa').innerText = target.getAttribute('data-cgpa');
+                    document.getElementById('candModalScore').innerText = target.getAttribute('data-score') + ' / 100';
+                    const modal = new bootstrap.Modal(document.getElementById('inspectCandidateModal'));
+                    modal.show();
+                });
+            });
+        });
+
+        function switchActiveRole(role) {
+            document.getElementById('studentWorkspace').classList.add('d-none');
+            document.getElementById('recruiterWorkspace').classList.add('d-none');
+            document.getElementById('adminWorkspace').classList.add('d-none');
+
+            document.getElementById('roleBtnStudent').className = 'role-pill-btn';
+            document.getElementById('roleBtnRecruiter').className = 'role-pill-btn';
+            document.getElementById('roleBtnAdmin').className = 'role-pill-btn';
+
+            if (role === 'STUDENT') {
+                document.getElementById('studentWorkspace').classList.remove('d-none');
+                document.getElementById('roleBtnStudent').className = 'role-pill-btn active-student';
+            } else if (role === 'RECRUITER') {
+                document.getElementById('recruiterWorkspace').classList.remove('d-none');
+                document.getElementById('roleBtnRecruiter').className = 'role-pill-btn active-recruiter';
+            } else if (role === 'ADMIN') {
+                document.getElementById('adminWorkspace').classList.remove('d-none');
+                document.getElementById('roleBtnAdmin').className = 'role-pill-btn active-admin';
+            }
+        }
+
+        function showStudentSubTab(tabName) {
+            document.querySelectorAll('.student-sub-view').forEach(el => el.classList.add('d-none'));
+            document.querySelectorAll('#studentSubNav .nav-master-tab').forEach(el => el.classList.remove('active'));
+
+            const targetView = document.getElementById('studentSub-' + tabName);
+            if (targetView) targetView.classList.remove('d-none');
+
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+
+            if (tabName === 'skillgap') {
+                setTimeout(() => {
+                    const select = document.getElementById('targetRoleSelect');
+                    const role = select ? select.value : 'Full Stack Developer';
+                    renderSkillRadarChart('skillRadarCanvas', role);
+                }, 100);
+            }
+
+            if (tabName === 'coding') {
+                setTimeout(() => {
+                    if (typeof loadCodingProblem === 'function') {
+                        const select = document.getElementById('codingProblemSelect');
+                        loadCodingProblem(select ? select.value : 'two-sum');
+                    }
+                }, 100);
+            }
+        }
+
+        function updateSkillGapAnalysis() {
+            const role = document.getElementById('targetRoleSelect').value;
+            renderSkillRadarChart('skillRadarCanvas', role);
+
+            fetch(`/api/student/skillgap?role=${encodeURIComponent(role)}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('skillMatchPercent').innerText = data.matchPercentage + '%';
+                    const missingBox = document.getElementById('missingSkillsBox');
+                    missingBox.innerHTML = '';
+                    if (data.missingSkills.length === 0) {
+                        missingBox.innerHTML = '<span class="badge bg-success p-2">None! 100% Skill Match</span>';
+                    } else {
+                        data.missingSkills.forEach(m => {
+                            missingBox.innerHTML += `<span class="badge bg-danger-subtle text-danger p-2 fs-6 border me-1 mb-1">${m}</span>`;
+                        });
+                    }
+                    const recsList = document.getElementById('recommendationsList');
+                    recsList.innerHTML = '';
+                    data.recommendations.forEach(r => {
+                        recsList.innerHTML += `<li>${r}</li>`;
+                    });
+
+                    triggerLiveNotificationAlert('Skill Gap Updated', `Benchmark updated for role: ${role} (${data.matchPercentage}% match)`, 'info');
+                });
+        }
+    </script>
+</body>
+</html>

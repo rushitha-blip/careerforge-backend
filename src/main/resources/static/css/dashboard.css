@@ -1,0 +1,122 @@
+/* Master Unified Dashboard & Workspace Layout */
+
+.nav-master-tab {
+    color: var(--text-secondary);
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
+    background: transparent;
+    cursor: pointer;
+}
+
+.nav-master-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-master-tab.active {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+/* Master Circular Gauge */
+.gauge-circle-master {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: conic-gradient(#6366f1 calc(var(--score) * 1%), rgba(255, 255, 255, 0.08) 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+}
+
+.gauge-circle-inner {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.score-display-num {
+    font-size: 2.75rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+
+/* Interactive Timeline Nodes */
+.timeline-master {
+    position: relative;
+    padding-left: 35px;
+}
+
+.timeline-master::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    background: linear-gradient(180deg, #6366f1 0%, #06b6d4 100%);
+    border-radius: 3px;
+}
+
+.step-node-item {
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.step-node-badge {
+    position: absolute;
+    left: -35px;
+    top: 4px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #6366f1;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+
+/* Quiz Option Selectors */
+.quiz-option-master {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.quiz-option-master:hover {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.quiz-option-master input[type="radio"]:checked + label {
+    font-weight: 700;
+    color: #818cf8;
+}

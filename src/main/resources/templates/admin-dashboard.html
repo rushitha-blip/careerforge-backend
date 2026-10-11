@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institutional Placement Control - CareerForge AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="d-flex align-items-center gap-2 mb-4 px-2">
+                <i class="fas fa-user-shield text-danger fa-xl"></i>
+                <span class="brand-title fs-4">Placement Cell</span>
+            </div>
+
+            <nav class="nav flex-column mb-auto" id="adminTabs" role="tablist">
+                <button class="nav-link-custom active" data-bs-toggle="tab" data-bs-target="#tab-admin-overview">
+                    <i class="fas fa-chart-pie"></i> Institutional Analytics
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-admin-users">
+                    <i class="fas fa-users"></i> Registered Users
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-admin-skills">
+                    <i class="fas fa-list-check"></i> Skill Taxonomy
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-admin-questions">
+                    <i class="fas fa-question-circle"></i> Question Bank
+                </button>
+            </nav>
+
+            <div class="border-top border-secondary pt-3 mt-3">
+                <div class="d-flex align-items-center justify-content-between text-muted px-2 mb-2">
+                    <small>System Administrator</small>
+                    <button class="theme-toggle-btn p-1 fs-6" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+                </div>
+                <a href="/logout" class="nav-link-custom text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Flash Message Alerts -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}">Success</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${errorMessage}">Error</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Institutional Placement Analytics</h3>
+                    <p class="text-secondary mb-0">University Placement Readiness Control Center</p>
+                </div>
+                <button class="btn btn-outline-secondary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> Print Placement Report
+                </button>
+            </div>
+
+            <div class="tab-content" id="adminTabContent">
+                <!-- 1. INSTITUTIONAL ANALYTICS -->
+                <div class="tab-pane fade show active" id="tab-admin-overview">
+                    <!-- Stat Cards -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3 col-6">
+                            <div class="card-saas p-3 text-center">
+                                <div class="small text-muted mb-1">Total Enrolled Students</div>
+                                <h3 class="fw-bold text-primary mb-0" th:text="${metrics.totalStudents}">3</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card-saas p-3 text-center">
+                                <div class="small text-muted mb-1">Verified Recruiters</div>
+                                <h3 class="fw-bold text-success mb-0" th:text="${metrics.totalRecruiters}">1</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card-saas p-3 text-center">
+                                <div class="small text-muted mb-1">Active Job Listings</div>
+                                <h3 class="fw-bold text-info mb-0" th:text="${metrics.totalJobs}">3</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card-saas p-3 text-center">
+                                <div class="small text-muted mb-1">Average Readiness Score</div>
+                                <h3 class="fw-bold text-warning mb-0" th:text="${metrics.averageReadinessScore} + ' / 100'">78.4 / 100</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <div class="card-saas p-4 h-100">
+                                <h5 class="fw-bold mb-3">Placement Readiness Score Trend</h5>
+                                <div style="height: 300px;">
+                                    <canvas id="adminTrendCanvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5">
+                            <div class="card-saas p-4 h-100">
+                                <h5 class="fw-bold mb-3">Readiness Category Breakdown</h5>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                        <span><i class="fas fa-circle text-success me-2"></i> Placement Ready (&ge;75%)</span>
+                                        <span class="badge bg-success fs-6">2 Candidates</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                        <span><i class="fas fa-circle text-warning me-2"></i> High Potential (55-74%)</span>
+                                        <span class="badge bg-warning text-dark fs-6">1 Candidate</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                        <span><i class="fas fa-circle text-danger me-2"></i> Needs Focus (&lt;55%)</span>
+                                        <span class="badge bg-danger fs-6">0 Candidates</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. USERS MANAGEMENT -->
+                <div class="tab-pane fade" id="tab-admin-users">
+                    <div class="card-saas p-4">
+                        <h4 class="fw-bold mb-3">Registered Platform Users (<span th:text="${users.size()}">5</span>)</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Phone</th>
+                                        <th>Registration Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="u : ${users}">
+                                        <td th:text="${u.id}">1</td>
+                                        <td class="fw-bold" th:text="${u.name}">User Name</td>
+                                        <td th:text="${u.email}">Email</td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${u.role == 'ADMIN' ? 'bg-danger' : (u.role == 'RECRUITER' ? 'bg-success' : 'bg-primary')}"
+                                                  th:text="${u.role}">STUDENT</span>
+                                        </td>
+                                        <td th:text="${u.phone}">Phone</td>
+                                        <td th:text="${#temporals.format(u.createdAt, 'dd MMM yyyy')}">Date</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. SKILLS TAXONOMY -->
+                <div class="tab-pane fade" id="tab-admin-skills">
+                    <div class="card-saas p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold mb-0">Global Skill Taxonomy Catalog (<span th:text="${skills.size()}">14</span>)</h4>
+                            <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addSkillAdminModal">+ Add Skill to Catalog</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Skill ID</th>
+                                        <th>Skill Name</th>
+                                        <th>Category</th>
+                                        <th>Industry Demand Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="sk : ${skills}">
+                                        <td th:text="${sk.id}">1</td>
+                                        <td class="fw-bold" th:text="${sk.name}">Java</td>
+                                        <td th:text="${sk.category}">Technical</td>
+                                        <td>
+                                            <span class="badge bg-primary" th:text="${sk.demandLevel}">High</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. QUESTION BANK -->
+                <div class="tab-pane fade" id="tab-admin-questions">
+                    <div class="card-saas p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold mb-0">Assessment Question Bank (<span th:text="${questions != null ? questions.size() : 0}">12</span>)</h4>
+                            <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addQuestionModal">+ Add Question</button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Topic</th>
+                                        <th>Difficulty</th>
+                                        <th>Question</th>
+                                        <th>Correct Option</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="q : ${questions}">
+                                        <td><span class="badge bg-primary" th:text="${q.category}">TECHNICAL</span></td>
+                                        <td class="fw-bold" th:text="${q.topic}">Java</td>
+                                        <td>
+                                            <span class="badge" 
+                                                  th:classappend="${q.difficulty == 'HARD' ? 'bg-danger' : (q.difficulty == 'MEDIUM' ? 'bg-warning text-dark' : 'bg-success')}"
+                                                  th:text="${q.difficulty}">MEDIUM</span>
+                                        </td>
+                                        <td class="small" th:text="${q.question}">Question text...</td>
+                                        <td class="fw-bold text-success" th:text="${q.correctAnswer}">B</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Skill Modal Admin -->
+    <div class="modal fade" id="addSkillAdminModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/skill/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Add Skill to Global Taxonomy</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Skill Name</label>
+                            <input type="text" name="name" class="form-control" required placeholder="Kubernetes">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="Technical">Technical</option>
+                                <option value="Tool">Tool / Platform</option>
+                                <option value="Framework">Framework</option>
+                                <option value="Soft Skill">Soft Skill</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Demand Level</label>
+                            <select name="demandLevel" class="form-select" required>
+                                <option value="High">High Demand</option>
+                                <option value="Trending">Trending</option>
+                                <option value="Medium">Medium</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary-custom">Save Skill</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Question Modal Admin -->
+    <div class="modal fade" id="addQuestionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form th:action="@{/admin/question/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Add Question to Institutional Question Bank</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Category</label>
+                                <select name="category" class="form-select" required>
+                                    <option value="TECHNICAL">Technical</option>
+                                    <option value="APTITUDE">Aptitude & Logic</option>
+                                    <option value="HR">HR & Behavioral</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Topic</label>
+                                <input type="text" name="topic" class="form-control" required placeholder="Java / Spring / Logic">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Difficulty</label>
+                                <select name="difficulty" class="form-select" required>
+                                    <option value="EASY">Easy</option>
+                                    <option value="MEDIUM" selected>Medium</option>
+                                    <option value="HARD">Hard</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Question Text</label>
+                                <textarea name="question" class="form-control" rows="3" required placeholder="Enter question formulation..."></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Option A</label>
+                                <input type="text" name="optionA" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Option B</label>
+                                <input type="text" name="optionB" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Option C</label>
+                                <input type="text" name="optionC" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Option D</label>
+                                <input type="text" name="optionD" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Correct Option</label>
+                                <select name="correctAnswer" class="form-select" required>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Explanation / Rationale</label>
+                                <input type="text" name="explanation" class="form-control" required placeholder="Why is this answer correct?">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary-custom">Save Question</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/charts.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Restore active tab from URL hash if present
+            if (window.location.hash) {
+                const targetBtn = document.querySelector(`button[data-bs-target="${window.location.hash}"]`);
+                if (targetBtn) {
+                    const tab = new bootstrap.Tab(targetBtn);
+                    tab.show();
+                }
+            }
+
+            // Sync hash on tab switch
+            document.querySelectorAll('#adminTabs button').forEach(btn => {
+                btn.addEventListener('shown.bs.tab', (e) => {
+                    const target = e.target.getAttribute('data-bs-target');
+                    if (target) {
+                        history.replaceState(null, null, target);
+                    }
+                });
+            });
+
+            initAdminTrendChart('adminTrendCanvas');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - CareerForge AI</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="d-flex align-items-center gap-2 mb-4 px-2">
+                <i class="fas fa-brain text-primary fa-xl"></i>
+                <span class="brand-title fs-4">CareerForge</span>
+            </div>
+
+            <nav class="nav flex-column mb-auto" id="dashboardTabs" role="tablist">
+                <button class="nav-link-custom active" data-bs-toggle="tab" data-bs-target="#tab-overview">
+                    <i class="fas fa-chart-line"></i> Overview &amp; Readiness
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-skillgap">
+                    <i class="fas fa-chart-radar"></i> Skill Gap Analyzer
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-advisor">
+                    <i class="fas fa-compass"></i> Career Advisor
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-roadmap">
+                    <i class="fas fa-route"></i> Learning Roadmap
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-resume">
+                    <i class="fas fa-file-contract"></i> Resume Builder (ATS)
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-interview">
+                    <i class="fas fa-laptop-code"></i> Mock Interview Engine
+                </button>
+                <button class="nav-link-custom" data-bs-toggle="tab" data-bs-target="#tab-jobs">
+                    <i class="fas fa-briefcase"></i> Job Discovery
+                </button>
+            </nav>
+
+            <div class="border-top border-secondary pt-3 mt-3">
+                <div class="d-flex align-items-center justify-content-between text-muted px-2 mb-2">
+                    <small th:text="${user.name}">Student</small>
+                    <button class="theme-toggle-btn p-1 fs-6" id="themeToggleBtn" title="Theme"><i class="fas fa-moon"></i></button>
+                </div>
+                <a href="/logout" class="nav-link-custom text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Flash Message Alerts -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><span th:text="${successMessage}">Success</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i><span th:text="${errorMessage}">Error</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Header Bar -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1">Welcome back, <span th:text="${user.name}">Rahul</span> 👋</h3>
+                    <p class="text-secondary mb-0">
+                        <span th:text="${profile.branch}">CS</span> | <span th:text="${profile.year}">4th Year</span> | CGPA: <span class="fw-bold text-primary" th:text="${profile.cgpa}">8.8</span>
+                    </p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/student/resume/download-pdf" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-pdf me-1"></i> Download PDF Resume
+                    </a>
+                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        <i class="fas fa-user-edit me-1"></i> Edit Profile
+                    </button>
+                    <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                        <i class="fas fa-plus me-1"></i> Add Skill
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="dashboardTabContent">
+
+                <!-- 1. OVERVIEW & PLACEMENT READINESS -->
+                <div class="tab-pane fade show active" id="tab-overview">
+                    <div class="row g-4 mb-4">
+                        <!-- Score Gauge Widget -->
+                        <div class="col-lg-4">
+                            <div class="card-saas p-4 text-center h-100">
+                                <h5 class="fw-bold mb-3">Placement Readiness Score</h5>
+                                <div class="readiness-gauge mb-3" th:style="'--score:' + ${readiness.totalScore}">
+                                    <div class="readiness-gauge-inner">
+                                        <span class="score-val" th:text="${readiness.totalScore}">83</span>
+                                        <span class="score-max">/ 100</span>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="badge-custom" 
+                                          th:classappend="${readiness.totalScore >= 75 ? 'badge-ready' : (readiness.totalScore >= 55 ? 'badge-potential' : 'badge-focus')}"
+                                          th:text="${readiness.status}">Placement Ready</span>
+                                </div>
+                                <p class="small text-secondary mb-0 mt-2">Calculated dynamically across 5 weighted evaluation factors</p>
+                            </div>
+                        </div>
+
+                        <!-- 5 Pillar Scores Breakdown -->
+                        <div class="col-lg-8">
+                            <div class="card-saas p-4 h-100">
+                                <h5 class="fw-bold mb-3">Readiness Pillar Breakdown</h5>
+                                <div class="row g-3">
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-3 bg-light-subtle rounded-3 text-center border">
+                                            <div class="small text-muted mb-1">Technical Skills (40%)</div>
+                                            <h4 class="fw-bold text-primary mb-0"><span th:text="${readiness.techSkillScore}">35</span><small class="fs-6 text-muted">/40</small></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-3 bg-light-subtle rounded-3 text-center border">
+                                            <div class="small text-muted mb-1">Coding &amp; Aptitude (20%)</div>
+                                            <h4 class="fw-bold text-success mb-0"><span th:text="${readiness.codingAptitudeScore}">16</span><small class="fs-6 text-muted">/20</small></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-3 bg-light-subtle rounded-3 text-center border">
+                                            <div class="small text-muted mb-1">Projects (15%)</div>
+                                            <h4 class="fw-bold text-info mb-0"><span th:text="${readiness.projectScore}">11</span><small class="fs-6 text-muted">/15</small></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-3 bg-light-subtle rounded-3 text-center border">
+                                            <div class="small text-muted mb-1">Resume Quality (15%)</div>
+                                            <h4 class="fw-bold text-warning mb-0"><span th:text="${readiness.resumeScore}">13</span><small class="fs-6 text-muted">/15</small></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-3 bg-light-subtle rounded-3 text-center border">
+                                            <div class="small text-muted mb-1">Mock Interview (10%)</div>
+                                            <h4 class="fw-bold text-danger mb-0"><span th:text="${readiness.interviewScore}">8</span><small class="fs-6 text-muted">/10</small></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-3 bg-light-subtle rounded-3 text-center border">
+                                            <div class="small text-muted mb-1">Target Role Track</div>
+                                            <h5 class="fw-bold text-dark mb-0 text-truncate" th:text="${profile.careerGoal}">Full Stack</h5>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Items -->
+                                <div class="mt-4 pt-3 border-top">
+                                    <h6 class="fw-bold mb-2 text-secondary"><i class="fas fa-lightbulb text-warning me-1"></i> Actionable Steps to Maximize Readiness</h6>
+                                    <ul class="small text-secondary mb-0 ps-3">
+                                        <li th:each="fb : ${readiness.feedbackItems}" th:text="${fb}">Add more certifications</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skills & Projects Quick View -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card-saas p-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold mb-0">Your Verified Skills (<span th:text="${studentSkills.size()}">6</span>)</h5>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addSkillModal">+ Add</button>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-primary-subtle text-primary p-2 border" th:each="ss : ${studentSkills}">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        <span th:text="${ss.skill.name}">Java</span> 
+                                        <small class="opacity-75" th:text="'(' + ${ss.proficiency} + ')'"></small>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card-saas p-4 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold mb-0">Featured Projects (<span th:text="${projects.size()}">2</span>)</h5>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">+ Add</button>
+                                </div>
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item bg-transparent px-0" th:each="proj : ${projects}">
+                                        <div class="fw-bold" th:text="${proj.title}">E-Commerce API</div>
+                                        <p class="small text-secondary mb-1" th:text="${proj.description}">Description</p>
+                                        <span class="badge bg-secondary-subtle text-dark border" th:text="${proj.techStack}">Java, MySQL</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. SKILL GAP ANALYZER -->
+                <div class="tab-pane fade" id="tab-skillgap">
+                    <div class="card-saas p-4 mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                            <div>
+                                <h4 class="fw-bold mb-1">Target Role Skill Gap Analyzer</h4>
+                                <p class="text-secondary mb-0">Compare your skills against industry standard job requirements</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="fw-semibold text-nowrap">Select Role:</label>
+                                <select id="targetRoleSelect" class="form-select" onchange="updateSkillGapAnalysis()">
+                                    <option value="Full Stack Developer" selected>Full Stack Developer</option>
+                                    <option value="Java Developer">Java Developer</option>
+                                    <option value="Software Engineer">Software Engineer</option>
+                                    <option value="Backend Developer">Backend Developer</option>
+                                    <option value="Data Scientist">Data Scientist</option>
+                                    <option value="AI Engineer">AI Engineer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 align-items-center">
+                            <div class="col-md-5 text-center">
+                                <div class="p-4 border rounded-4 bg-light-subtle">
+                                    <h6 class="text-muted">Target Role Skill Match</h6>
+                                    <div class="display-3 fw-bold text-primary my-2" id="skillMatchPercent" th:text="${skillGap.matchPercentage} + '%'">80%</div>
+                                    <span class="badge bg-success" id="matchBadge">High Match</span>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <h6 class="fw-bold">Missing Required Skills:</h6>
+                                <div id="missingSkillsBox" class="d-flex flex-wrap gap-2 mb-3">
+                                    <span class="badge bg-danger-subtle text-danger p-2 fs-6 border" th:each="m : ${skillGap.missingSkills}" th:text="${m}">Spring Boot</span>
+                                </div>
+                                <h6 class="fw-bold mt-3">Action Plan &amp; Recommendations:</h6>
+                                <ul id="recommendationsList" class="text-secondary small">
+                                    <li th:each="r : ${skillGap.recommendations}" th:text="${r}">Complete Spring Boot course</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. CAREER ADVISOR -->
+                <div class="tab-pane fade" id="tab-advisor">
+                    <div class="card-saas p-4 mb-4">
+                        <h4 class="fw-bold mb-3"><i class="fas fa-compass text-primary me-2"></i> Algorithmic Career Advisor</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <h5 class="fw-bold text-primary mb-3">Recommended Job Roles</h5>
+                                <div class="list-group">
+                                    <div class="list-group-item card-saas mb-2" th:each="role : ${guidance.recommendedRoles}">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="fw-bold" th:text="${role.title}">Java Full Stack Developer</h6>
+                                            <span class="badge bg-success" th:text="${role.matchScore}">88% Match</span>
+                                        </div>
+                                        <small class="text-secondary" th:text="'Market Demand: ' + ${role.demand} + ' | Avg Salary: ' + ${role.avgSalary}"></small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="fw-bold text-success mb-3">Suggested Learning Track</h5>
+                                <div class="border rounded-3 p-3 mb-3 bg-light-subtle">
+                                    <h6>Recommended Certifications:</h6>
+                                    <ul class="small text-secondary">
+                                        <li th:each="c : ${guidance.suggestedCerts}" th:text="${c}">AWS Certified Developer</li>
+                                    </ul>
+                                </div>
+                                <div class="border rounded-3 p-3 bg-light-subtle">
+                                    <h6>Next Tech Stack to Learn:</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge bg-info-subtle text-info border" th:each="t : ${guidance.suggestedTech}" th:text="${t}">Microservices</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. LEARNING ROADMAP (DYNAMIC & PERSISTENT) -->
+                <div class="tab-pane fade" id="tab-roadmap">
+                    <div class="card-saas p-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                            <div>
+                                <h4 class="fw-bold mb-1"><i class="fas fa-route text-primary me-2"></i>Personalized Learning Roadmap</h4>
+                                <p class="text-secondary mb-0">Role Track: <span class="fw-bold text-primary" th:text="${profile.careerGoal}">Full Stack Developer</span></p>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-end">
+                                    <div class="small fw-semibold text-muted">Milestone Progress</div>
+                                    <div class="fw-bold fs-5 text-success"><span th:text="${roadmapProgress}">50</span>%</div>
+                                </div>
+                                <div class="progress" style="width: 140px; height: 12px;">
+                                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" th:style="'width:' + ${roadmapProgress} + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-roadmap">
+                            <div class="roadmap-step mb-3" th:each="task : ${roadmapTasks}">
+                                <div class="card-saas p-3 border" th:classappend="${task.completed ? 'border-success-subtle bg-success-subtle' : ''}">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                        <div>
+                                            <span class="badge bg-primary me-2" th:text="'Step ' + ${task.stepNumber}">Step 1</span>
+                                            <span class="badge bg-secondary-subtle text-dark border me-2" th:text="${task.category}">Fundamentals</span>
+                                            <span class="fw-bold fs-6" th:classappend="${task.completed ? 'text-success text-decoration-line-through' : 'text-dark'}" th:text="${task.title}">Task Title</span>
+                                        </div>
+                                        <form th:action="@{'/student/roadmap/toggle/' + ${task.id}}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm" th:classappend="${task.completed ? 'btn-success' : 'btn-outline-secondary'}">
+                                                <i class="fas" th:classappend="${task.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
+                                                <span th:text="${task.completed ? 'Completed' : 'Mark Done'}">Mark Done</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <p class="small text-secondary mb-2" th:text="${task.description}">Description</p>
+                                    <div th:if="${task.resourceLink != null}">
+                                        <a th:href="${task.resourceLink}" target="_blank" class="small text-primary text-decoration-none">
+                                            <i class="fas fa-external-link-alt me-1"></i> Recommended Curriculum Resource
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. RESUME BUILDER & ATS -->
+                <div class="tab-pane fade" id="tab-resume">
+                    <div class="card-saas p-4 mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <h4 class="fw-bold mb-0">Interactive Resume Builder &amp; ATS Evaluator</h4>
+                            <div class="d-flex gap-2">
+                                <a href="/student/resume/download-pdf" class="btn btn-success btn-sm">
+                                    <i class="fas fa-file-pdf me-1"></i> Download PDF Resume
+                                </a>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="printFormattedResume()">
+                                    <i class="fas fa-print me-1"></i> Print View
+                                </button>
+                                <button class="btn btn-primary-custom btn-sm" onclick="evaluateResumeAtsScore()">
+                                    <i class="fas fa-sync me-1"></i> Evaluate ATS Score
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Editor Inputs -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Professional Summary</label>
+                                    <textarea id="resumeSummaryInput" class="form-control" rows="4" th:text="${resume.summary}"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Key Skills (Comma Separated)</label>
+                                    <input type="text" id="resumeSkillsInput" class="form-control" th:value="${resume.skillsCsv}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Resume Style Template</label>
+                                    <select id="resumeTemplateSelect" class="form-select">
+                                        <option value="Modern Standard" selected>Modern Standard (ATS Optimized)</option>
+                                        <option value="Executive Clean">Executive Clean</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Live ATS Score Card -->
+                            <div class="col-md-6">
+                                <div class="card-saas p-4 bg-light-subtle h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold mb-0">ATS Compatibility Score</h6>
+                                        <span id="atsScoreBadge" class="badge bg-success fs-5" th:text="${resume.atsScore} + ' / 100'">88 / 100</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 10px;">
+                                        <div class="progress-bar bg-success" role="progressbar" th:style="'width:' + ${resume.atsScore} + '%'"></div>
+                                    </div>
+                                    <h6 class="fw-bold mb-1">ATS Optimization Feedback:</h6>
+                                    <p id="atsSuggestionsBox" class="small text-secondary mb-0" th:text="${resume.atsSuggestions}">Optimized formatting.</p>
+
+                                    <!-- Live Preview Box -->
+                                    <div class="border p-3 bg-white rounded mt-3 text-dark">
+                                        <h6 class="fw-bold mb-1" th:text="${user.name}">Rahul Sharma</h6>
+                                        <small class="text-muted" th:text="${user.email} + ' | ' + ${profile.branch} + ' (' + ${profile.year} + ')'"></small>
+                                        <hr class="my-2">
+                                        <p id="previewSummary" class="small mb-2" th:text="${resume.summary}">Summary text...</p>
+                                        <div class="small fw-bold">Skills:</div>
+                                        <p id="previewSkills" class="small text-muted mb-0" th:text="${resume.skillsCsv}">Skills CSV</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. MOCK INTERVIEW -->
+                <div class="tab-pane fade" id="tab-interview">
+                    <div class="card-saas p-4 mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                            <div>
+                                <h4 class="fw-bold mb-1">Assessment Engine &amp; Mock Interview Practice</h4>
+                                <p class="text-secondary mb-0">Practice timed Technical, HR, and Aptitude assessments with instant answer scoring</p>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-primary-custom" onclick="startMockInterview('TECHNICAL')">
+                                    <i class="fas fa-code me-1"></i> Technical Quiz (Java/Spring)
+                                </button>
+                                <button class="btn btn-info text-white" onclick="startMockInterview('APTITUDE')">
+                                    <i class="fas fa-calculator me-1"></i> Aptitude Quiz
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="startMockInterview('HR')">
+                                    <i class="fas fa-comments me-1"></i> HR Quiz
+                                </button>
+                                <button class="btn btn-dark" onclick="startMockInterview('ALL')">
+                                    <i class="fas fa-layer-group me-1"></i> Full Mock Test
+                                </button>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-3">Interview &amp; Assessment History</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Category</th>
+                                        <th>Overall Score</th>
+                                        <th>Technical</th>
+                                        <th>HR</th>
+                                        <th>Weak Areas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="mi : ${interviewHistory}">
+                                        <td th:text="${#temporals.format(mi.takenAt, 'dd MMM yyyy HH:mm')}">Date</td>
+                                        <td><span class="badge bg-primary" th:text="${mi.category}">TECHNICAL</span></td>
+                                        <td class="fw-bold text-success" th:text="${mi.overallScore} + '%'">85%</td>
+                                        <td th:text="${mi.technicalScore} + '%'">90%</td>
+                                        <td th:text="${mi.hrScore} + '%'">80%</td>
+                                        <td class="small text-secondary" th:text="${mi.weakAreas}">Weak areas</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. JOB DISCOVERY -->
+                <div class="tab-pane fade" id="tab-jobs">
+                    <div class="card-saas p-4">
+                        <h4 class="fw-bold mb-3">Recommended Job Opportunities &amp; Skill Match</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6" th:each="jm : ${recommendedJobs}">
+                                <div class="card-saas p-4 h-100">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h5 class="fw-bold mb-1" th:text="${jm.job.title}">Java Developer</h5>
+                                            <div class="text-secondary fw-medium" th:text="${jm.job.company}">TechCorp Solutions</div>
+                                        </div>
+                                        <span class="badge bg-success fs-6" th:text="${jm.matchPercentage} + '% Match'">88% Match</span>
+                                    </div>
+
+                                    <div class="small text-muted mb-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i> <span th:text="${jm.job.location}">Bangalore</span> | 
+                                        <i class="fas fa-money-bill-wave me-1"></i> <span th:text="${jm.job.packageOffered}">₹8 - ₹12 LPA</span>
+                                    </div>
+
+                                    <p class="small text-secondary mb-3" th:text="${jm.job.description}">Job desc</p>
+
+                                    <div class="mb-3">
+                                        <small class="fw-bold text-muted">Required Skills:</small>
+                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                            <span class="badge bg-light text-dark border" th:each="s : ${#strings.arraySplit(jm.job.requiredSkills, ',')}" th:text="${#strings.trim(s)}">Java</span>
+                                        </div>
+                                    </div>
+
+                                    <form th:action="@{'/student/job/apply/' + ${jm.job.id}}" method="post">
+                                        <button type="submit" class="btn btn-primary-custom w-100" th:disabled="${jm.applied}">
+                                            <span th:if="${jm.applied}"><i class="fas fa-check me-1"></i> Applied</span>
+                                            <span th:unless="${jm.applied}">Apply with Profile <i class="fas fa-paper-plane ms-1"></i></span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/student/profile/update}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-header-title fw-bold">Edit Student Profile</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Academic Branch</label>
+                            <input type="text" name="branch" class="form-control" th:value="${profile.branch}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Academic Year</label>
+                            <input type="text" name="year" class="form-control" th:value="${profile.year}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cumulative CGPA</label>
+                            <input type="number" step="0.01" name="cgpa" class="form-control" th:value="${profile.cgpa}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Target Career Goal</label>
+                            <input type="text" name="careerGoal" class="form-control" th:value="${profile.careerGoal}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">LinkedIn Profile URL</label>
+                            <input type="url" name="linkedinUrl" class="form-control" th:value="${profile.linkedinUrl}" placeholder="https://linkedin.com/in/username">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">GitHub Profile URL</label>
+                            <input type="url" name="githubUrl" class="form-control" th:value="${profile.githubUrl}" placeholder="https://github.com/username">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Bio / Profile Summary</label>
+                            <textarea name="bio" class="form-control" rows="3" th:text="${profile.bio}"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary-custom">Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Skill Modal -->
+    <div class="modal fade" id="addSkillModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/student/skill/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Add Verified Skill</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Skill Name</label>
+                            <select name="skillId" class="form-select" required>
+                                <option th:each="sk : ${allSkillsCatalog}" th:value="${sk.id}" th:text="${sk.name} + ' (' + ${sk.category} + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Proficiency Level</label>
+                            <select name="proficiency" class="form-select" required>
+                                <option value="BEGINNER">Beginner</option>
+                                <option value="INTERMEDIATE" selected>Intermediate</option>
+                                <option value="ADVANCED">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary-custom">Add Skill</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div class="modal fade" id="addProjectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/student/project/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="fw-bold">Add Technical Project</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Project Title</label>
+                            <input type="text" name="title" class="form-control" required placeholder="AI Resume Evaluator">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" required placeholder="Describe key architecture and metrics..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tech Stack (Comma Separated)</label>
+                            <input type="text" name="techStack" class="form-control" required placeholder="Java, Spring Boot, MySQL">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary-custom">Add Project</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Simulator Modal -->
+    <div class="modal fade" id="mockInterviewModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="fw-bold mb-0">Placement Assessment Simulator</h5>
+                    <div class="badge bg-warning text-dark fs-6" id="quizTimer">10:00</div>
+                </div>
+                <div class="modal-body" id="quizContainer">
+                    <!-- Dynamic Question Cards injected by interview.js -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success btn-lg w-100" onclick="submitMockInterview()">Submit Assessment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS & App JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/charts.js}"></script>
+    <script th:src="@{/js/resume.js}"></script>
+    <script th:src="@{/js/interview.js}"></script>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            // Restore active tab from URL hash if present
+            if (window.location.hash) {
+                const targetBtn = document.querySelector(`button[data-bs-target="${window.location.hash}"]`);
+                if (targetBtn) {
+                    const tab = new bootstrap.Tab(targetBtn);
+                    tab.show();
+                }
+            }
+
+            // Sync hash on tab switch
+            document.querySelectorAll('#dashboardTabs button').forEach(btn => {
+                btn.addEventListener('shown.bs.tab', (e) => {
+                    const target = e.target.getAttribute('data-bs-target');
+                    if (target) {
+                        history.replaceState(null, null, target);
+                    }
+                });
+            });
+
+            const roleSelect = document.getElementById('targetRoleSelect');
+            if (roleSelect) {
+                updateSkillGapAnalysis();
+            }
+        });
+
+        function updateSkillGapAnalysis() {
+            const role = document.getElementById('targetRoleSelect').value;
+            fetch(`/api/student/skillgap?role=${encodeURIComponent(role)}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('skillMatchPercent').innerText = data.matchPercentage + '%';
+                    
+                    const missingBox = document.getElementById('missingSkillsBox');
+                    missingBox.innerHTML = '';
+                    if (!data.missingSkills || data.missingSkills.length === 0) {
+                        missingBox.innerHTML = '<span class="badge bg-success p-2">None! 100% Skill Match</span>';
+                    } else {
+                        data.missingSkills.forEach(m => {
+                            missingBox.innerHTML += `<span class="badge bg-danger-subtle text-danger p-2 fs-6 border me-1 mb-1">${m}</span>`;
+                        });
+                    }
+
+                    const recsList = document.getElementById('recommendationsList');
+                    recsList.innerHTML = '';
+                    if (data.recommendations) {
+                        data.recommendations.forEach(r => {
+                            recsList.innerHTML += `<li>${r}</li>`;
+                        });
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
